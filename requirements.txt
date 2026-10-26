@@ -1,1 +1,7 @@
 sqlalchemy
+fastapi
+pydantic
+email-validator
+python-dotenv
+PyJWT
+bcrypt
