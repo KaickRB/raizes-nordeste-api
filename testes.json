@@ -1,0 +1,691 @@
+{
+  "info": {
+    "_postman_id": "bf94bc85-cd17-48f9-9cb9-1cc8e4f825ad",
+    "name": "Raizes do Nordeste - Testes da API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "59036799",
+    "_collection_link": "https://go.postman.co/collection/59036799-bf94bc85-cd17-48f9-9cb9-1cc8e4f825ad?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "00 Preparacao",
+      "item": [
+        {
+          "name": "S0 Seed - popular banco",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\",()=>pm.response.to.have.status(200));",
+                  "const j=pm.response.json();",
+                  "pm.test(\"tem message\",()=>pm.expect(!!j.message).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/seed",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "seed"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "S1 Login do gerente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\",()=>pm.response.to.have.status(200));",
+                  "const j=pm.response.json();",
+                  "pm.test(\"tem access_token\",()=>pm.expect(!!j.access_token).to.be.true);",
+                  "pm.collectionVariables.set(\"tokenGerente\",j.access_token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"gerente@raizes.com\", \"senha\": \"senha123\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "S2 Pedido auxiliar (canal APP) para o teste de pagamento recusado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\",()=>pm.response.to.have.status(201));",
+                  "const j=pm.response.json();",
+                  "pm.collectionVariables.set(\"pedidoAux\",j.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGerente}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"unidade_id\": 1, \"canalPedido\": \"APP\", \"itens\": [{\"produto_id\": 1, \"quantidade\": 1}], \"formaPagamento\": \"PIX\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pedidos/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01 Testes positivos",
+      "item": [
+        {
+          "name": "T01 Login valido do cliente (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\",()=>pm.response.to.have.status(200));",
+                  "const j=pm.response.json();",
+                  "pm.test(\"tem access_token\",()=>pm.expect(!!j.access_token).to.be.true);",
+                  "pm.collectionVariables.set(\"tokenCliente\",j.access_token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"joao@gmail.com\", \"senha\": \"senha123\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "T02 Criar pedido valido (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\",()=>pm.response.to.have.status(201));",
+                  "const j=pm.response.json();",
+                  "pm.test(\"AGUARDANDO_PAGAMENTO\",()=>pm.expect(j.status===\"AGUARDANDO_PAGAMENTO\").to.be.true);",
+                  "pm.test(\"canal TOTEM\",()=>pm.expect(j.canal_pedido===\"TOTEM\").to.be.true);",
+                  "pm.test(\"total 37\",()=>pm.expect(j.total===37).to.be.true);",
+                  "pm.collectionVariables.set(\"pedido1\",j.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"unidade_id\": 1, \"canalPedido\": \"TOTEM\", \"itens\": [{\"produto_id\": 1, \"quantidade\": 2}], \"formaPagamento\": \"PIX\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pedidos/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "T03 Filtrar pedidos por canal (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\",()=>pm.response.to.have.status(200));",
+                  "const j=pm.response.json();",
+                  "pm.test(\"todos TOTEM\",()=>pm.expect(j.data.length>0 && j.data.every(p=>p.canal_pedido===\"TOTEM\")).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pedidos/?canalPedido=TOTEM",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "canalPedido",
+                  "value": "TOTEM"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "T04 Pagamento aprovado muda status para PAGO (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\",()=>pm.response.to.have.status(201));",
+                  "const j=pm.response.json();",
+                  "pm.test(\"pedido PAGO\",()=>pm.expect(j.status_pedido===\"PAGO\").to.be.true);",
+                  "pm.test(\"tem codigo_transacao\",()=>pm.expect(!!j.codigo_transacao).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"pedido_id\": {{pedido1}}, \"resultado\": \"APROVADO\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pagamentos/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pagamentos",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "T05 Pagamento recusado cancela o pedido (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\",()=>pm.response.to.have.status(201));",
+                  "const j=pm.response.json();",
+                  "pm.test(\"pagamento RECUSADO\",()=>pm.expect(j.status_pagamento===\"RECUSADO\").to.be.true);",
+                  "pm.test(\"pedido CANCELADO\",()=>pm.expect(j.status_pedido===\"CANCELADO\").to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGerente}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"pedido_id\": {{pedidoAux}}, \"resultado\": \"RECUSADO\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pagamentos/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pagamentos",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "T06 Gerente ve o log de auditoria (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\",()=>pm.response.to.have.status(200));",
+                  "const j=pm.response.json();",
+                  "pm.test(\"tem CRIACAO_PEDIDO\",()=>pm.expect(j.data.some(l=>l.acao===\"CRIACAO_PEDIDO\")).to.be.true);",
+                  "pm.test(\"tem PAGAMENTO\",()=>pm.expect(j.data.some(l=>l.acao===\"PAGAMENTO\")).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenGerente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auditoria/?limit=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auditoria",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 Testes negativos",
+      "item": [
+        {
+          "name": "T07 Acesso sem token (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 401\",()=>pm.response.to.have.status(401));",
+                  "const j=pm.response.json();",
+                  "pm.test(\"error NAO_AUTORIZADO\",()=>pm.expect(j.error===\"NAO_AUTORIZADO\").to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pedidos/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "T08 Cliente tenta ver auditoria - sem permissao (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 403\",()=>pm.response.to.have.status(403));",
+                  "const j=pm.response.json();",
+                  "pm.test(\"error SEM_PERMISSAO\",()=>pm.expect(j.error===\"SEM_PERMISSAO\").to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auditoria/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auditoria",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "T09 Pedido sem canalPedido - campo obrigatorio (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 422\",()=>pm.response.to.have.status(422));",
+                  "const j=pm.response.json();",
+                  "pm.test(\"error ERRO_DE_VALIDACAO\",()=>pm.expect(j.error===\"ERRO_DE_VALIDACAO\").to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"unidade_id\": 1, \"itens\": [{\"produto_id\": 1, \"quantidade\": 1}], \"formaPagamento\": \"PIX\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pedidos/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "T10 Quantidade negativa - formato invalido (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 422\",()=>pm.response.to.have.status(422));",
+                  "const j=pm.response.json();",
+                  "pm.test(\"error ERRO_DE_VALIDACAO\",()=>pm.expect(j.error===\"ERRO_DE_VALIDACAO\").to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"unidade_id\": 1, \"canalPedido\": \"TOTEM\", \"itens\": [{\"produto_id\": 1, \"quantidade\": -1}], \"formaPagamento\": \"PIX\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pedidos/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "T11 Produto inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 404\",()=>pm.response.to.have.status(404));",
+                  "const j=pm.response.json();",
+                  "pm.test(\"error NAO_ENCONTRADO\",()=>pm.expect(j.error===\"NAO_ENCONTRADO\").to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"unidade_id\": 1, \"canalPedido\": \"TOTEM\", \"itens\": [{\"produto_id\": 999, \"quantidade\": 2}], \"formaPagamento\": \"PIX\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pedidos/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "T12 Estoque insuficiente (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 409\",()=>pm.response.to.have.status(409));",
+                  "const j=pm.response.json();",
+                  "pm.test(\"error ESTOQUE_INSUFICIENTE\",()=>pm.expect(j.error===\"ESTOQUE_INSUFICIENTE\").to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"unidade_id\": 1, \"canalPedido\": \"TOTEM\", \"itens\": [{\"produto_id\": 1, \"quantidade\": 9999}], \"formaPagamento\": \"PIX\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pedidos/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pedidos",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000"
+    },
+    {
+      "key": "tokenGerente",
+      "value": ""
+    },
+    {
+      "key": "pedidoAux",
+      "value": ""
+    },
+    {
+      "key": "tokenCliente",
+      "value": ""
+    },
+    {
+      "key": "pedido1",
+      "value": ""
+    }
+  ]
+}
